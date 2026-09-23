@@ -1,0 +1,49 @@
+name: Flutter Android Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Restore CodeForge Flutter folders
+        run: |
+          mkdir -p lib/screens
+          mkdir -p test
+          mkdir -p tool
+
+          mv main.dart lib/main.dart
+          mv home_screen.dart lib/screens/home_screen.dart
+          mv details_screen.dart lib/screens/details_screen.dart
+          mv widget_test.dart test/widget_test.dart
+          mv bootstrap_android.sh tool/bootstrap_android.sh
+
+          chmod +x tool/bootstrap_android.sh
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Show Flutter version
+        run: flutter --version
+
+      - name: Generate Android project
+        run: bash tool/bootstrap_android.sh
+
+      - name: Get packages
+        run: flutter pub get
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: FlutterTest-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
